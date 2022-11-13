@@ -14,16 +14,16 @@ import (
 )
 
 type album struct {
-	ID     string  `json:id`
-	Title  string  `json:title`
-	Artist string  `json:artist`
-	Price  float64 `json:price`
+	ID     string  `json:"id"`
+	Title  string  `json:"title"`
+	Artist string  `json:"artist"`
+	Price  float64 `json:"price"`
 }
 
 type account struct {
-	ID       string `json:id`
-	Username string `json:username`
-	Password string `json:password`
+	ID       string `json:"id"`
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 var albums = []album{
