@@ -29,3 +29,37 @@ content-type: application/json
     "artist": "artist 5 update",
     "price": 55.99
 }
+
+###
+
+http://localhost:8080/
+
+###
+POST http://localhost:8080/login HTTP/1.1
+content-type: application/json
+
+{
+    "username": "",
+    "password": ""
+}
+
+###
+POST http://localhost:8080/login HTTP/1.1
+content-type: application/json
+
+{
+    "username": "hoge",
+    "password": "fuga"
+}
+
+###
+POST http://localhost:8080/login HTTP/1.1
+content-type: application/json
+
+{
+    "username": "hello",
+    "password": "itsme"
+}
+
+###
+POST http://localhost:8080/logout HTTP/1.1

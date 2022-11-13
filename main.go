@@ -1,9 +1,16 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+
+	globals "github.com/satouyuuki/golang-simple-api/globals"
+	helpers "github.com/satouyuuki/golang-simple-api/helpers"
+	middleware "github.com/satouyuuki/golang-simple-api/middleware"
 )
 
 type album struct {
@@ -11,6 +18,12 @@ type album struct {
 	Title  string  `json:title`
 	Artist string  `json:artist`
 	Price  float64 `json:price`
+}
+
+type account struct {
+	ID       string `json:id`
+	Username string `json:username`
+	Password string `json:password`
 }
 
 var albums = []album{
@@ -104,13 +117,86 @@ func putAlbumByID(c *gin.Context) {
 	c.IndentedJSON(http.StatusCreated, updateAlbum)
 }
 
+func login(c *gin.Context) {
+	session := sessions.Default(c)
+	user := session.Get(globals.Userkey)
+	if user != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Please logout first"})
+		return
+	}
+
+	var requestBody account
+	if err := c.BindJSON(&requestBody); err != nil {
+		return
+	}
+
+	username := requestBody.Username
+	password := requestBody.Password
+
+	log.Println(username, password)
+
+	if helpers.EmptyUserPass(username, password) {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Parameters can't be empty"})
+		return
+	}
+
+	if !helpers.CheckUserPass(username, password) {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "Incorrect username or password"})
+		return
+	}
+
+	session.Set(globals.Userkey, username)
+	if err := session.Save(); err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to save session"})
+		return
+	}
+
+	c.Redirect(http.StatusFound, "/")
+}
+
+func logout(c *gin.Context) {
+	session := sessions.Default(c)
+	user := session.Get(globals.Userkey)
+	if user == nil {
+		log.Println("Invalid session token")
+		return
+	}
+	session.Delete(globals.Userkey)
+	if err := session.Save(); err != nil {
+		log.Println("Failed to save session:", err)
+		return
+	}
+	c.Redirect(http.StatusFound, "/")
+}
+
+func index(c *gin.Context) {
+	session := sessions.Default(c)
+	user := session.Get(globals.Userkey)
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"message": "This is an index page...",
+		"user":    user,
+	})
+}
+
 func setupRouter() *gin.Engine {
 	router := gin.Default()
-	router.GET("/albums", getAlbums)
-	router.GET("/albums/:id", getAlbumByID)
-	router.POST("/albums", postAlbums)
-	router.DELETE("/albums/:id", deleteAlbumByID)
-	router.PUT("/albums/:id", putAlbumByID)
+
+	// Setup the cookie store for session management
+	router.Use(sessions.Sessions("session", cookie.NewStore(globals.Secret)))
+
+	// Private group, require authentication to access
+	public := router.Group("/")
+	public.POST("/login", login)
+	public.GET("/", index)
+
+	private := router.Group("/")
+	private.Use(middleware.AuthRequired)
+	private.GET("/albums", getAlbums)
+	private.GET("/albums/:id", getAlbumByID)
+	private.POST("/albums", postAlbums)
+	private.DELETE("/albums/:id", deleteAlbumByID)
+	private.PUT("/albums/:id", putAlbumByID)
+	private.POST("/logout", logout)
 	return router
 }
 
