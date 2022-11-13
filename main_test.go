@@ -20,12 +20,43 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
+func TestLogin(t *testing.T) {
+	jsonBody := []byte(`{
+		"username": "hello",
+		"password": "itsme"
+	}`)
+	bodyReader := bytes.NewReader(jsonBody)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/login", bodyReader)
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusFound, w.Code)
+}
+
+func TestLogout(t *testing.T) {
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/logout", nil)
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestIndex(t *testing.T) {
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/", nil)
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	fmt.Println(w.Body.String())
+}
+
 func TestGetAlbums(t *testing.T) {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/albums", nil)
 	router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
+	// assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
 	fmt.Println(w.Body.String())
 }
 
@@ -34,7 +65,8 @@ func TestGetAlbumByID(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/albums/1", nil)
 	router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
+	// assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
 	fmt.Println(w.Body.String())
 }
 
@@ -43,7 +75,8 @@ func TestDeleteAlbumByID(t *testing.T) {
 	req, _ := http.NewRequest("DELETE", "/albums/1", nil)
 	router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusNoContent, w.Code)
+	// assert.Equal(t, http.StatusNoContent, w.Code)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
 	fmt.Println(w.Body.String())
 }
 
@@ -59,7 +92,8 @@ func TestPostAlbums(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/albums", bodyReader)
 	router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusCreated, w.Code)
+	// assert.Equal(t, http.StatusCreated, w.Code)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
 	fmt.Println(w.Body.String())
 }
 
@@ -75,6 +109,7 @@ func TestPutAlbumByID(t *testing.T) {
 	req, _ := http.NewRequest("PUT", "/albums/3", bodyReader)
 	router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusNoContent, w.Code)
+	// assert.Equal(t, http.StatusNoContent, w.Code)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
 	fmt.Println(w.Body.String())
 }
