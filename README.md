@@ -1,3 +1,6 @@
+### ローカル環境
+go version go1.19.2 darwin/arm64
+
 ### モジュールを初期化する
 $ go mod init example.com/m
 
@@ -11,3 +14,6 @@ $ go get .
 
 ### example.httpファイルの使い方
 vscodeにREST ClientというExtensionsをインストールして使ってください
+
+### module pathが違うと怒られた
+go mod edit -replace example.com/m@v0.1=github.com/satouyuuki/golang-simple-api@v0.1
